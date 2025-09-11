@@ -1,6 +1,6 @@
 # YTMD: دانلودر موسیقی یوتیوب
 
-[🇬🇧 EN](#README.md) | [🇷🇺 RU](#README.ru.md) | [🇮🇷 FA](#README.fa.md) | [🇨🇳 ZH](#README.zh.md) | [🇯🇵 JA](#README.jp.md) | [🇪🇸 ES](#README.es.md) | [🇩🇪 DE](#README.de.md) | [🇫🇷 FR](#README.fr.md)
+[🇬🇧 EN](README.md) | [🇷🇺 RU](README.ru.md) | [🇮🇷 FA](README.fa.md) | [🇨🇳 ZH](README.zh.md) | [🇯🇵 JA](README.jp.md) | [🇪🇸 ES](README.es.md) | [🇩🇪 DE](README.de.md) | [🇫🇷 FR](README.fr.md)
 
 ### چرا فقط از yt-dlp استفاده کنیم؟
 ### این اسکریپت به شما اجازه می‌دهد متادیتا را مستقیماً از یوتیوب یا یوتیوب موزیک دریافت کنید

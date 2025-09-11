@@ -1,6 +1,6 @@
 # YTMD: YouTube-Music-Downloader
 
-[🇬🇧 EN](#README.md) | [🇷🇺 RU](#README.ru.md) | [🇮🇷 FA](#README.fa.md) | [🇨🇳 ZH](#README.zh.md) | [🇯🇵 JA](#README.jp.md) | [🇪🇸 ES](#README.es.md) | [🇩🇪 DE](#README.de.md) | [🇫🇷 FR](#README.fr.md)
+[🇬🇧 EN](README.md) | [🇷🇺 RU](README.ru.md) | [🇮🇷 FA](README.fa.md) | [🇨🇳 ZH](README.zh.md) | [🇯🇵 JA](README.jp.md) | [🇪🇸 ES](README.es.md) | [🇩🇪 DE](README.de.md) | [🇫🇷 FR](README.fr.md)
 
 ### Why just use yt-dlp?
 ### This script let you get the metadata straight from the youtube or youtube music
