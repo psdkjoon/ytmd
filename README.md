@@ -22,7 +22,7 @@ git clone https://github.com/psdkjoon/ytmd
 and run the install.sh:
 
 ```bash
-./instal.sh
+./install.sh
 ```
 
 ## Usage
