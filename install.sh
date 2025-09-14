@@ -43,11 +43,16 @@ fi
 
 sudo tee /usr/bin/ytmd >/dev/null <<EOF
 #!/usr/bin/env bash
-[[ -f "$1" ]] && while read -r url; do yt-dlp -f "bestaudio" -x --audio-format mp3 --audio-quality 0 --cookies-from-browser $BROWSER --write-thumbnail --convert-thumbnails png --output "%(album)s//*\\%(artist)s//*\\%(title)s.%(ext)s" "$url"; done <"$1" || yt-dlp -f "bestaudio" -x --audio-format mp3 --audio-quality 0 --cookies-from-browser $BROWSER --write-thumbnail --convert-thumbnails png --output "%(album)s//*\\%(artist)s//*\\%(title)s.%(ext)s" "$1"
+SEP='|'
+BROWSER=$BROWSER
+EOF
+
+sudo tee -a /usr/bin/ytmd >/dev/null <<'EOF'
+[[ -f "$1" ]] && while read -r url; do yt-dlp -f "bestaudio" -x --audio-format mp3 --audio-quality 0 --cookies-from-browser $BROWSER --write-thumbnail --convert-thumbnails png --output "%(album)s$SEP%(artist)s$SEP%(title)s.%(ext)s" "$url"; done <"$1" || yt-dlp -f "bestaudio" -x --audio-format mp3 --audio-quality 0 --cookies-from-browser $BROWSER --write-thumbnail --convert-thumbnails png --output "%(album)s$SEP%(artist)s$SEP%(title)s.%(ext)s" "$1"
 for f in *.mp3; do
 	[[ ! -f "$f" ]] && continue
 	base="${f%.mp3}"
-	IFS='//*\\' read -r album artist title <<<"$base"
+	IFS=$SEP read -r album artist title <<<"$base"
 	cover="$base.png"
 	sq="$base.sq.png"
 	w=$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=p=0 "$cover")
@@ -56,14 +61,13 @@ for f in *.mp3; do
 	x=$(((w - s) / 2))
 	y=$(((h - s) / 2))
 	ffmpeg -i "$cover" -vf "crop=$s:$s:$x:$y" -vframes 1 "$sq" -y -loglevel error 2>/dev/null
-	mkdir -p "${artist%%, *}"
+	mkdir -p "${artist%%,*}"
 	ffmpeg -i "$f" -i "$sq" -map 0:a -map 1 -c copy \
 		-metadata title="$title" -metadata artist="$artist" -metadata album="$album" \
-		-disposition:v attached_pic "$artist/$f" -y -loglevel error
-	echo "✅ $f → $artist/"
+		-disposition:v attached_pic "${artist%%,*}/$title.mp3" -y -loglevel error
+	echo "✅ $title → ${artist%%,*}/"
 done
-rm -f *.png *.jpg *.mp3
 EOF
 
 sudo chmod +x /usr/bin/ytmd
-sudo rm -rf README.de.md README.es.md README.fa.md README.fr.md README.jp.md README.md README.ru.md README.zh.md
+sudo rm -rf *.md
