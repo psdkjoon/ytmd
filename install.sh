@@ -48,7 +48,7 @@ BROWSER=$BROWSER
 EOF
 
 sudo tee -a /usr/bin/ytmd >/dev/null <<'EOF'
-[[ -f "$1" ]] && while read -r url; do yt-dlp -f "bestaudio" -x --audio-format mp3 --audio-quality 0 --cookies-from-browser $BROWSER --write-thumbnail --convert-thumbnails png --output "%(album)s$SEP%(artist)s$SEP%(title)s.%(ext)s" "$url"; done <"$1" || yt-dlp -f "bestaudio" -x --audio-format mp3 --audio-quality 0 --cookies-from-browser $BROWSER --write-thumbnail --convert-thumbnails png --output "%(album)s$SEP%(artist)s$SEP%(title)s.%(ext)s" "$1"
+[[ -f "$1" ]] && while read -r url; do yt-dlp -f "bestaudio/best" -x --audio-format mp3 --audio-quality 0 --cookies-from-browser $BROWSER --write-thumbnail --convert-thumbnails png --output "%(album)s$SEP%(artist)s$SEP%(title)s.%(ext)s" "$url"; done <"$1" || yt-dlp -f "bestaudio/best" -x --audio-format mp3 --audio-quality 0 --cookies-from-browser $BROWSER --write-thumbnail --convert-thumbnails png --output "%(album)s$SEP%(artist)s$SEP%(title)s.%(ext)s" "$1"
 for f in *.mp3; do
 	[[ ! -f "$f" ]] && continue
 	base="${f%.mp3}"
@@ -61,11 +61,16 @@ for f in *.mp3; do
 	x=$(((w - s) / 2))
 	y=$(((h - s) / 2))
 	ffmpeg -i "$cover" -vf "crop=$s:$s:$x:$y" -vframes 1 "$sq" -y -loglevel error 2>/dev/null
-	mkdir -p "${artist%%,*}"
+  if [[ "$artist" == "NA" || -z "$artist" ]]; then
+		folder="Unknown Artist"
+	else
+		folder="${artist%%,*}"
+	fi
+	mkdir -p "$folder"
 	ffmpeg -i "$f" -i "$sq" -map 0:a -map 1 -c copy \
 		-metadata title="$title" -metadata artist="$artist" -metadata album="$album" \
-		-disposition:v attached_pic "${artist%%,*}/$title.mp3" -y -loglevel error
-	echo "✅ $title → ${artist%%,*}/"
+		-disposition:v attached_pic "$folder/$title.mp3" -y -loglevel error
+	echo "✅ $title → $folder/"
 done
 EOF
 
