@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ytmd - YouTube Music Downloader</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;600&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+
+      /* ========================================
+         CSS VARIABLES - Catppuccin Mocha Theme
+         ======================================== */
+      :root {
+        --ctp-rosewater: #f5e0dc;
+        --ctp-flamingo: #f2cdcd;
+        --ctp-pink: #f5c2e7;
+        --ctp-mauve: #cba6f7;
+        --ctp-red: #f38ba8;
+        --ctp-maroon: #eba0ac;
+        --ctp-peach: #fab387;
+        --ctp-yellow: #f9e2af;
+        --ctp-green: #a6e3a1;
+        --ctp-teal: #94e2d5;
+        --ctp-sky: #89dceb;
+        --ctp-sapphire: #74c7ec;
+        --ctp-blue: #89b4fa;
+        --ctp-lavender: #b4befe;
+        --ctp-text: #cdd6f4;
+        --ctp-subtext1: #bac2de;
+        --ctp-subtext0: #a6adc8;
+        --ctp-overlay2: #9399b2;
+        --ctp-surface0: #313244;
+        --ctp-surface1: #45475a;
+        --ctp-surface2: #585b70;
+        --ctp-base: #1e1e2e;
+        --ctp-mantle: #181825;
+        --ctp-crust: #11111b;
+        --accent: var(--ctp-red);
+        --primary: var(--ctp-maroon);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 0px;
+      }
+
+      body {
+        background-color: var(--ctp-base);
+        color: var(--ctp-text);
+        font-family: "Space Grotesk", sans-serif;
+        overflow-x: hidden;
+        line-height: 1.8;
+        width: 100%;
+      }
+
+      #canvas-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        opacity: 0.4;
+      }
+
+      .section-title {
+        margin: 10px 0px;
+      }
+
+      .card-title {
+        margin: 10px 0px 20px 0px;
+      }
+
+      .section-paragraph {
+        margin: 10px 0px;
+      }
+
+      .section-card {
+        margin: 20px 0px 0px 0px;
+      }
+
+      .title-font {
+        font-family: "EB Garamond", serif;
+      }
+
+      .special-text {
+        font-family: "EB Garamond";
+      }
+
+      .accent-text {
+        color: var(--accent);
+      }
+
+      .accent-bg {
+        background-color: var(--accent);
+      }
+
+      .gradient-text {
+        background: linear-gradient(135deg, var(--accent), var(--primary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .unselectable-text {
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+      }
+
+      .glass-panel {
+        background: rgba(30, 30, 46, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      }
+
+      .glass-panel-light {
+        background: rgba(49, 50, 68, 0.5);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 12px 24px;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: bold;
+      }
+
+      .tag {
+        display: inline-block;
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-size: 0.875rem;
+      }
+
+      .small-tag {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+      }
+
+      .nav-link {
+        position: relative;
+        transition: color 0.3s ease;
+      }
+
+      .nav-link::after {
+        content: "";
+        position: absolute;
+        bottom: -4px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: var(--accent);
+        transition: width 0.3s ease;
+      }
+
+      .nav-link:hover::after {
+        width: 100%;
+      }
+
+      .nav-link:hover {
+        color: var(--accent);
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes fadeInLeft {
+        from {
+          opacity: 0;
+          transform: translateX(-30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      @keyframes fadeInRight {
+        from {
+          opacity: 0;
+          transform: translateX(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        50% {
+          transform: scale(1.05);
+          opacity: 0.8;
+        }
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+
+      @keyframes smoothBounce {
+        0%,
+        100% {
+          transform: translateY(0) rotate(0deg);
+        }
+        25% {
+          transform: translateY(-6px) rotate(1deg);
+        }
+        50% {
+          transform: translateY(0) rotate(0deg);
+        }
+        75% {
+          transform: translateY(-6px) rotate(-1deg);
+        }
+      }
+
+      @keyframes scrollDot {
+        0% {
+          top: 8px;
+          opacity: 1;
+        }
+        50% {
+          top: 20px;
+          opacity: 0.5;
+        }
+        100% {
+          top: 8px;
+          opacity: 1;
+        }
+      }
+
+      @keyframes heartbeat {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        25% {
+          transform: scale(1.1);
+        }
+        50% {
+          transform: scale(1);
+        }
+        75% {
+          transform: scale(1.1);
+        }
+      }
+
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .fade-in-up {
+        animation: fadeInUp 0.8s ease-out forwards;
+        opacity: 0;
+      }
+
+      .fade-in-left {
+        animation: fadeInLeft 0.8s ease-out forwards;
+        opacity: 0;
+      }
+
+      .fade-in-right {
+        animation: fadeInRight 0.8s ease-out forwards;
+        opacity: 0;
+      }
+
+      .float-animation {
+        animation: float 3s ease-in-out infinite;
+      }
+
+      .smooth-bounce {
+        animation: smoothBounce 5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      }
+
+      .pulse-animation {
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      .heartbeat {
+        animation: heartbeat 1.5s ease-in-out infinite;
+      }
+
+      .animate-spin {
+        animation: spin 1s linear infinite;
+      }
+
+      .delay-100 {
+        animation-delay: 0.1s;
+      }
+
+      .delay-200 {
+        animation-delay: 0.2s;
+      }
+
+      .delay-300 {
+        animation-delay: 0.3s;
+      }
+
+      .delay-400 {
+        animation-delay: 0.4s;
+      }
+
+      .delay-500 {
+        animation-delay: 0.5s;
+      }
+
+      .delay-600 {
+        animation-delay: 0.6s;
+      }
+
+      .reveal {
+        opacity: 0;
+        transform: translateY(40px);
+        transition: all 0.8s ease-out;
+      }
+
+      .reveal.active {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .info-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .info-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      }
+
+      .card-content {
+        padding: 32px;
+      }
+
+      .feature-icon {
+        width: 70px;
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+        transition: all 0.3s ease;
+      }
+
+      .feature-icon:hover {
+        transform: scale(1.2) rotate(5deg);
+        color: var(--accent);
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 32px;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        border: none;
+        font-size: 1rem;
+      }
+
+      .btn-primary {
+        background: var(--accent);
+        color: var(--ctp-base);
+        margin: 16px 0;
+      }
+
+      .btn-primary:hover {
+        filter: brightness(1.1);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(243, 139, 168, 0.3);
+      }
+
+      .btn-outline {
+        background: transparent;
+        border: 2px solid var(--accent);
+        color: var(--accent);
+        margin: 16px 0;
+      }
+
+      .btn-outline:hover {
+        background: var(--accent);
+        color: var(--ctp-base);
+      }
+
+      .stat-number {
+        font-size: 3rem;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+
+      .stat-card {
+        padding: 30px 0px;
+      }
+
+      .stat-icon {
+        font-size: 3.5rem;
+        margin-bottom: 5px;
+      }
+
+      .glow-orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(60px);
+        opacity: 0.3;
+        pointer-events: none;
+      }
+
+      .scroll-indicator {
+        position: absolute;
+        bottom: 40px;
+        left: 50%;
+        transform: translateX(-50%);
+        animation: float 2s ease-in-out infinite;
+      }
+
+      .scroll-mouse {
+        width: 26px;
+        height: 42px;
+        border: 2px solid var(--accent);
+        border-radius: 13px;
+        position: relative;
+      }
+
+      .scroll-mouse::before {
+        content: "";
+        display: block;
+        width: 4px;
+        height: 8px;
+        background: var(--accent);
+        border-radius: 2px;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        top: 8px;
+        animation: scrollDot 1.5s ease-in-out infinite;
+      }
+
+      section {
+        padding: 120px 0;
+        position: relative;
+        overflow: visible;
+        width: 100%;
+      }
+
+      .main-wrapper {
+        overflow-x: clip;
+        width: 100%;
+      }
+
+      .container {
+        max-width: 72rem;
+        margin-left: auto;
+        margin-right: auto;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+        width: 100%;
+      }
+
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: var(--ctp-mantle);
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: var(--ctp-surface1);
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--accent);
+      }
+
+      .terminal {
+        font-family: "Courier New", monospace;
+        background: var(--ctp-crust);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      .terminal-header {
+        background: var(--ctp-surface0);
+        padding: 12px 16px;
+        display: flex;
+        gap: 8px;
+      }
+
+      .terminal-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+      }
+
+      .terminal-body {
+        padding: 24px;
+        font-size: 14px;
+      }
+
+      .terminal-body > div {
+        margin-bottom: 16px;
+      }
+
+      .terminal-body > div:last-child {
+        margin-bottom: 0;
+      }
+
+      .terminal-prompt {
+        color: var(--ctp-green);
+      }
+
+      .terminal-command {
+        color: var(--ctp-text);
+        margin-left: 8px;
+      }
+
+      .terminal-output {
+        color: var(--ctp-subtext0);
+        margin-left: 24px;
+        margin-top: 6px;
+      }
+
+      .code-block {
+        background: var(--ctp-crust);
+        border-radius: 12px;
+        padding: 24px;
+        font-family: "Courier New", monospace;
+        font-size: 14px;
+        overflow-x: auto;
+        border: 1px solid var(--ctp-surface1);
+      }
+
+      .code-line {
+        margin-bottom: 8px;
+        color: var(--ctp-text);
+      }
+
+      .code-line:last-child {
+        margin-bottom: 0;
+      }
+
+      .code-comment {
+        color: var(--ctp-overlay2);
+      }
+
+      footer {
+        padding-bottom: 60px;
+      }
+
+      /* FIX: Centered install card */
+      .install-card-wrapper {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+      }
+
+      .install-card {
+        width: 100%;
+        max-width: 56rem;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ==================== CANVAS BACKGROUND ==================== -->
+    <canvas id="canvas-bg"></canvas>
+
+    <div class="main-wrapper">
+      <!-- ==================== NAVIGATION ==================== -->
+      <nav class="fixed top-0 left-0 right-0 z-50 glass-panel">
+        <div class="container flex justify-between items-center py-4">
+          <a href="#" class="text-2xl font-bold title-font">
+            <span class="accent-text">ytmd</span>
+          </a>
+          <div class="hidden md:flex gap-8">
+            <a href="#home" class="nav-link">Home</a>
+            <a href="#about" class="nav-link">About</a>
+            <a href="#features" class="nav-link">Features</a>
+            <a href="#installation" class="nav-link">Install</a>
+            <a href="#usage" class="nav-link">Usage</a>
+          </div>
+          <button
+            id="menuBtn"
+            class="md:hidden p-2 rounded-lg glass-panel-light"
+            aria-expanded="false"
+            aria-label="Toggle navigation menu"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+          </button>
+        </div>
+      </nav>
+
+      <!-- ==================== MOBILE MENU ==================== -->
+      <div
+        id="mobileMenu"
+        class="fixed inset-0 z-40 glass-panel hidden flex-col items-center justify-center gap-8 text-2xl"
+        role="navigation"
+        aria-label="Mobile navigation"
+      >
+        <a href="#home" class="nav-link mobile-link">Home</a>
+        <a href="#about" class="nav-link mobile-link">About</a>
+        <a href="#features" class="nav-link mobile-link">Features</a>
+        <a href="#installation" class="nav-link mobile-link">Install</a>
+        <a href="#usage" class="nav-link mobile-link">Usage</a>
+      </div>
+
+      <!-- ==================== HERO SECTION ==================== -->
+      <section
+        id="home"
+        class="min-h-screen flex items-center justify-center relative"
+      >
+        <div
+          class="glow-orb w-96 h-96 accent-bg"
+          style="top: -80px; left: -80px"
+        ></div>
+        <div
+          class="glow-orb w-64 h-64 bg-[var(--primary)]"
+          style="bottom: 80px; right: -80px"
+        ></div>
+
+        <div class="container relative z-10">
+          <div class="flex flex-col items-center text-center">
+            <div class="fade-in-up mb-10">
+              <span class="badge glass-panel-light accent-text">
+                <span class="unselectable-text">🎵 </span>CLI Music Downloader
+              </span>
+            </div>
+
+            <div
+              class="unselectable-text text-8xl mb-8 fade-in-up delay-100 heartbeat"
+            >
+              🎵
+            </div>
+
+            <h1
+              class="text-5xl md:text-7xl font-bold mb-10 fade-in-up delay-200 title-font section-title"
+            >
+              <span class="gradient-text">ytmd</span>
+            </h1>
+
+            <p
+              class="text-xl md:text-2xl text-[var(--ctp-subtext1)] mb-14 fade-in-up delay-300 max-w-2xl leading-relaxed"
+            >
+              A powerful
+              <span class="accent-text special-text"
+                >YouTube Music Downloader</span
+              >
+              built in pure Bash. Download your favorite tracks directly from
+              the terminal.
+            </p>
+
+            <div
+              class="flex flex-wrap gap-6 justify-center fade-in-up delay-400"
+            >
+              <a href="#installation" class="btn btn-primary">
+                Get Started
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </a>
+              <a
+                href="https://github.com/psdkjoon/ytmd"
+                target="_blank"
+                class="btn btn-outline"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path
+                    d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+                  />
+                </svg>
+                View on GitHub
+              </a>
+            </div>
+
+            <div
+              class="grid grid-cols-2 md:grid-cols-4 gap-8 mt-32 w-full fade-in-up delay-500"
+            >
+              <div class="glass-panel-light rounded-xl stat-card">
+                <div class="unselectable-text stat-icon">⚡</div>
+                <div class="text-sm text-[var(--ctp-subtext0)]">
+                  Lightning Fast
+                </div>
+              </div>
+              <div class="glass-panel-light rounded-xl stat-card">
+                <div class="unselectable-text stat-icon">🐚</div>
+                <div class="text-sm text-[var(--ctp-subtext0)]">Pure Bash</div>
+              </div>
+              <div class="glass-panel-light rounded-xl stat-card">
+                <div class="unselectable-text stat-icon">🎧</div>
+                <div class="text-sm text-[var(--ctp-subtext0)]">
+                  High Quality
+                </div>
+              </div>
+              <div class="glass-panel-light rounded-xl stat-card">
+                <div class="unselectable-text stat-icon">🆓</div>
+                <div class="text-sm text-[var(--ctp-subtext0)]">
+                  Open Source
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="scroll-indicator">
+          <div class="scroll-mouse"></div>
+        </div>
+      </section>
+
+      <!-- ==================== ABOUT SECTION ==================== -->
+      <section id="about" class="relative">
+        <div class="container">
+          <div class="flex justify-center mb-8">
+            <span class="badge glass-panel-light accent-text">
+              About ytmd
+            </span>
+          </div>
+          <!-- FIX: Increased gap from gap-20 to gap-28 for more space -->
+          <div
+            class="grid md:grid-cols-2 gap-12 md:gap-28 lg:gap-36 items-center"
+          >
+            <div class="reveal">
+              <div class="relative">
+                <div class="terminal float-animation">
+                  <div class="terminal-header">
+                    <div class="terminal-dot bg-[var(--ctp-red)]"></div>
+                    <div class="terminal-dot bg-[var(--ctp-yellow)]"></div>
+                    <div class="terminal-dot bg-[var(--ctp-green)]"></div>
+                  </div>
+                  <div class="terminal-body">
+                    <div>
+                      <span class="terminal-prompt">$</span>
+                      <span class="terminal-command">ytmd --help</span>
+                      <div class="terminal-output">
+                        ytmd - YouTube Music Downloader
+                      </div>
+                    </div>
+                    <div>
+                      <span class="terminal-prompt">$</span>
+                      <span class="terminal-command">ytmd [URL]</span>
+                      <div class="terminal-output">
+                        Downloading... ████████ 100%
+                      </div>
+                    </div>
+                    <div>
+                      <span class="terminal-prompt">$</span>
+                      <span class="terminal-command">ls -la</span>
+                      <div class="terminal-output">song.mp3 - Downloaded!</div>
+                    </div>
+                    <div>
+                      <span class="terminal-prompt">$</span>
+                      <span class="terminal-command accent-text">_</span>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  class="unselectable-text absolute -bottom-6 -right-6 w-24 h-24 rounded-xl accent-bg flex items-center justify-center text-4xl smooth-bounce"
+                >
+                  🎼
+                </div>
+              </div>
+            </div>
+
+            <div class="reveal">
+              <h2
+                class="text-4xl md:text-5xl font-bold mb-10 title-font text-center md:text-left section-title"
+              >
+                Simple Yet <span class="gradient-text">Powerful</span>
+              </h2>
+              <p
+                class="text-[var(--ctp-subtext1)] mb-8 leading-relaxed text-lg text-center md:text-left"
+              >
+                ytmd is a command-line tool that makes downloading music from
+                YouTube incredibly easy. No complex setup, no bloated GUI - just
+                pure, simple functionality.
+              </p>
+              <p
+                class="text-[var(--ctp-subtext1)] mb-12 leading-relaxed text-lg text-center md:text-left section-paragraph"
+              >
+                Built entirely in
+                <span class="accent-text special-text">Bash</span>, ytmd
+                leverages the power of yt-dlp to provide fast, reliable
+                downloads with support for single tracks, playlists, and batch
+                downloads.
+              </p>
+
+              <div class="flex flex-wrap gap-5 justify-center md:justify-start">
+                <span class="tag glass-panel-light"
+                  ><span class="unselectable-text">🐧 </span>Linux</span
+                >
+                <span class="tag glass-panel-light"
+                  ><span class="unselectable-text">🍎 </span>macOS</span
+                >
+                <span class="tag glass-panel-light"
+                  ><span class="unselectable-text">💻 </span>CLI</span
+                >
+                <span class="tag glass-panel-light"
+                  ><span class="unselectable-text">📝 </span>Bash</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== FEATURES SECTION ==================== -->
+      <section id="features" class="relative">
+        <div
+          class="glow-orb w-64 h-64 bg-[var(--primary)]"
+          style="top: 50%; right: -128px; transform: translateY(-50%)"
+        ></div>
+
+        <div class="container">
+          <div class="text-center mb-28 reveal">
+            <span class="badge glass-panel-light accent-text mb-8">
+              Key Features
+            </span>
+            <h2 class="text-4xl md:text-5xl font-bold title-font card-title">
+              Why Choose <span class="gradient-text">ytmd</span>?
+            </h2>
+          </div>
+
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
+            <div class="glass-panel rounded-2xl card-content reveal info-card">
+              <div class="flex items-center gap-5 mb-8">
+                <div
+                  class="unselectable-text w-16 h-16 rounded-xl accent-bg flex items-center justify-center text-3xl"
+                >
+                  ⚡
+                </div>
+                <h3 class="text-2xl font-bold">Lightning Fast</h3>
+              </div>
+              <p class="text-[var(--ctp-subtext1)] leading-relaxed">
+                Optimized for speed, ytmd downloads your music in seconds. No
+                waiting around.
+              </p>
+            </div>
+
+            <div class="glass-panel rounded-2xl card-content reveal info-card">
+              <div class="flex items-center gap-5 mb-8">
+                <div
+                  class="unselectable-text w-16 h-16 rounded-xl accent-bg flex items-center justify-center text-3xl"
+                >
+                  📋
+                </div>
+                <h3 class="text-2xl font-bold">Playlist Support</h3>
+              </div>
+              <p class="text-[var(--ctp-subtext1)] leading-relaxed">
+                Download entire playlists with a single command. Batch
+                processing made easy.
+              </p>
+            </div>
+
+            <div class="glass-panel rounded-2xl card-content reveal info-card">
+              <div class="flex items-center gap-5 mb-8">
+                <div
+                  class="unselectable-text w-16 h-16 rounded-xl accent-bg flex items-center justify-center text-3xl"
+                >
+                  🎧
+                </div>
+                <h3 class="text-2xl font-bold">High Quality</h3>
+              </div>
+              <p class="text-[var(--ctp-subtext1)] leading-relaxed">
+                Automatically selects the best available audio quality for your
+                downloads.
+              </p>
+            </div>
+
+            <div class="glass-panel rounded-2xl card-content reveal info-card">
+              <div class="flex items-center gap-5 mb-8">
+                <div
+                  class="unselectable-text w-16 h-16 rounded-xl accent-bg flex items-center justify-center text-3xl"
+                >
+                  📄
+                </div>
+                <h3 class="text-2xl font-bold">File Input</h3>
+              </div>
+              <p class="text-[var(--ctp-subtext1)] leading-relaxed">
+                Pass a text file with multiple URLs for batch downloading.
+              </p>
+            </div>
+
+            <div class="glass-panel rounded-2xl card-content reveal info-card">
+              <div class="flex items-center gap-5 mb-8">
+                <div
+                  class="unselectable-text w-16 h-16 rounded-xl accent-bg flex items-center justify-center text-3xl"
+                >
+                  🌍
+                </div>
+                <h3 class="text-2xl font-bold">Multilingual</h3>
+              </div>
+              <p class="text-[var(--ctp-subtext1)] leading-relaxed">
+                Available in 8 languages: EN, RU, FA, ZH, JA, ES, DE, FR.
+              </p>
+            </div>
+
+            <div class="glass-panel rounded-2xl card-content reveal info-card">
+              <div class="flex items-center gap-5 mb-8">
+                <div
+                  class="unselectable-text w-16 h-16 rounded-xl accent-bg flex items-center justify-center text-3xl"
+                >
+                  🆓
+                </div>
+                <h3 class="text-2xl font-bold">Free & Open</h3>
+              </div>
+              <p class="text-[var(--ctp-subtext1)] leading-relaxed">
+                Completely free and open source. No ads, no premium tiers, no
+                BS.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== INSTALLATION SECTION ==================== -->
+      <section id="installation" class="relative">
+        <div
+          class="glow-orb w-80 h-80 bg-[var(--ctp-green)]"
+          style="top: -160px; left: -160px"
+        ></div>
+
+        <div class="container">
+          <div class="text-center mb-28 reveal">
+            <span class="badge glass-panel-light accent-text mb-8">
+              Getting Started
+            </span>
+            <h2 class="text-4xl md:text-5xl font-bold title-font card-title">
+              <span class="gradient-text">Installation</span>
+            </h2>
+          </div>
+
+          <!-- FIX: Properly centered install card -->
+          <div class="install-card-wrapper reveal">
+            <div class="glass-panel rounded-2xl card-content install-card">
+              <h3 class="text-2xl font-bold mb-8 text-center">Quick Install</h3>
+
+              <div class="mb-12">
+                <p class="text-[var(--ctp-subtext1)] mb-6 text-center">
+                  Clone the repository and run the install script:
+                </p>
+                <div class="code-block">
+                  <div class="code-line">
+                    <span class="code-comment"># Clone the repository</span>
+                  </div>
+                  <div class="code-line">
+                    <span class="accent-text">git</span> clone
+                    https://github.com/psdkjoon/ytmd
+                  </div>
+                  <div class="code-line"></div>
+                  <div class="code-line">
+                    <span class="code-comment"># Navigate to directory</span>
+                  </div>
+                  <div class="code-line">
+                    <span class="accent-text">cd</span> ytmd
+                  </div>
+                  <div class="code-line"></div>
+                  <div class="code-line">
+                    <span class="code-comment"># Run installer</span>
+                  </div>
+                  <div class="code-line">
+                    <span class="accent-text">./install.sh</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="border-t border-[var(--ctp-surface1)] pt-12">
+                <h4 class="text-xl font-bold mb-6 text-center mt-28">
+                  Uninstallation
+                </h4>
+                <p class="text-[var(--ctp-subtext1)] mb-6 text-center">
+                  If you ever want to remove ytmd (but why would you?<span
+                    class="unselectable-text"
+                  >
+                    😉</span
+                  >):
+                </p>
+                <div class="code-block">
+                  <div class="code-line">
+                    <span class="accent-text">sudo</span> rm -rf /usr/bin/ytmd
+                  </div>
+                </div>
+                <p class="text-[var(--ctp-overlay2)] text-sm text-center mt-4">
+                  Note: There is no official uninstallation. This app is so good
+                  you can't uninstall it!
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== USAGE SECTION ==================== -->
+      <section id="usage" class="relative">
+        <div
+          class="glow-orb w-72 h-72 accent-bg"
+          style="bottom: 80px; right: -96px"
+        ></div>
+
+        <div class="container">
+          <div class="text-center mb-28 reveal">
+            <span class="badge glass-panel-light accent-text mb-8">
+              How to Use
+            </span>
+            <h2 class="text-4xl md:text-5xl font-bold title-font card-title">
+              Usage <span class="gradient-text">Examples</span>
+            </h2>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-10">
+            <div class="glass-panel rounded-2xl card-content reveal info-card">
+              <h3 class="text-xl font-bold mb-8">
+                <span class="unselectable-text">🎵 </span>Single Track
+              </h3>
+              <div class="code-block">
+                <div class="code-line">
+                  <span class="accent-text">ytmd</span> [YouTube URL]
+                </div>
+              </div>
+              <p class="text-[var(--ctp-subtext1)] mt-6 leading-relaxed">
+                Download a single music track by providing its YouTube URL.
+              </p>
+            </div>
+
+            <div class="glass-panel rounded-2xl card-content reveal info-card">
+              <h3 class="text-xl font-bold mb-8">
+                <span class="unselectable-text">📋 </span>Playlist
+              </h3>
+              <div class="code-block">
+                <div class="code-line">
+                  <span class="accent-text">ytmd</span> [Playlist URL]
+                </div>
+              </div>
+              <p class="text-[var(--ctp-subtext1)] mt-6 leading-relaxed">
+                Download an entire playlist with a single command.
+              </p>
+            </div>
+
+            <div class="glass-panel rounded-2xl card-content reveal info-card">
+              <h3 class="text-xl font-bold mb-8">
+                <span class="unselectable-text">📄 </span>Batch Download
+              </h3>
+              <div class="code-block">
+                <div class="code-line">
+                  <span class="accent-text">ytmd</span> urls.txt
+                </div>
+              </div>
+              <p class="text-[var(--ctp-subtext1)] mt-6 leading-relaxed">
+                Pass a text file containing multiple URLs for batch processing.
+              </p>
+            </div>
+
+            <div class="glass-panel rounded-2xl card-content reveal info-card">
+              <h3 class="text-xl font-bold mb-8">
+                <span class="unselectable-text">ℹ️ </span>Help
+              </h3>
+              <div class="code-block">
+                <div class="code-line">
+                  <span class="accent-text">ytmd</span> --help
+                </div>
+              </div>
+              <p class="text-[var(--ctp-subtext1)] mt-6 leading-relaxed">
+                Display help information and usage examples.
+              </p>
+            </div>
+          </div>
+
+          <div class="text-center mt-20 reveal">
+            <p
+              class="text-[var(--ctp-subtext0)] mb-12 text-lg section-paragraph"
+            >
+              Ready to start downloading?<span class="unselectable-text">
+                🚀</span
+              >
+            </p>
+            <a
+              href="https://github.com/psdkjoon/ytmd"
+              target="_blank"
+              class="btn btn-primary"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path
+                  d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+                />
+              </svg>
+              Get ytmd on GitHub
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== FOOTER ==================== -->
+      <footer class="py-14">
+        <div class="container text-center">
+          <p class="text-[var(--ctp-subtext0)] text-lg mb-4">
+            © 2025 <span class="accent-text">ytmd</span> by
+            <a
+              href="https://github.com/psdkjoon"
+              target="_blank"
+              class="accent-text hover:underline"
+              >Hossein</a
+            >
+          </p>
+          <p class="text-sm text-[var(--ctp-overlay2)]">
+            Open source music downloader. Made with<span
+              class="unselectable-text"
+            >
+              ❤️ </span
+            >and<span class="unselectable-text"> 🐚</span>
+          </p>
+        </div>
+      </footer>
+    </div>
+
+    <!-- ==================== JAVASCRIPT ==================== -->
+    <script>
+      /* ========================================
+         RANDOM CATPPUCCIN COLOR SYSTEM
+         ======================================== */
+      const colorPairs = [
+        { accent: "#cba6f7", primary: "#f5c2e7", name: "mauve-pink" },
+        { accent: "#f5c2e7", primary: "#cba6f7", name: "pink-mauve" },
+        { accent: "#89b4fa", primary: "#b4befe", name: "blue-lavender" },
+        { accent: "#b4befe", primary: "#89b4fa", name: "lavender-blue" },
+        { accent: "#94e2d5", primary: "#89dceb", name: "teal-sky" },
+        { accent: "#89dceb", primary: "#74c7ec", name: "sky-sapphire" },
+        { accent: "#a6e3a1", primary: "#94e2d5", name: "green-teal" },
+        { accent: "#fab387", primary: "#f9e2af", name: "peach-yellow" },
+        { accent: "#f9e2af", primary: "#fab387", name: "yellow-peach" },
+        { accent: "#f38ba8", primary: "#eba0ac", name: "red-maroon" },
+        { accent: "#eba0ac", primary: "#f5c2e7", name: "maroon-pink" },
+        { accent: "#f2cdcd", primary: "#f5e0dc", name: "flamingo-rosewater" },
+        { accent: "#74c7ec", primary: "#89b4fa", name: "sapphire-blue" },
+        { accent: "#cba6f7", primary: "#b4befe", name: "mauve-lavender" },
+      ];
+
+      // Select random accent color
+      const randomIndex = Math.floor(Math.random() * colorPairs.length);
+      const selectedColors = colorPairs[randomIndex];
+
+      // Apply colors to CSS variables
+      document.documentElement.style.setProperty(
+        "--accent",
+        selectedColors.accent
+      );
+      document.documentElement.style.setProperty(
+        "--primary",
+        selectedColors.primary
+      );
+
+      console.log(`🎨 Theme: ${selectedColors.name}`);
+
+      /* ========================================
+         CANVAS BACKGROUND ANIMATION
+         ======================================== */
+      const canvas = document.getElementById("canvas-bg");
+      const ctx = canvas.getContext("2d");
+      let width, height;
+
+      function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      }
+      window.addEventListener("resize", resize);
+      resize();
+
+      // Musical note pattern
+      const notes = [];
+      const noteSymbols = ["♪", "♫", "♬", "♩", "♭", "♯"];
+
+      for (let i = 0; i < 30; i++) {
+        notes.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          size: 20 + Math.random() * 30,
+          speedY: -0.3 - Math.random() * 0.5,
+          speedX: (Math.random() - 0.5) * 0.3,
+          symbol: noteSymbols[Math.floor(Math.random() * noteSymbols.length)],
+          opacity: 0.1 + Math.random(),
+          rotation: Math.random() * Math.PI * 2,
+          rotSpeed: (Math.random() - 0.5) * 0.02,
+        });
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, width, height);
+        ctx.font = "30px Arial";
+
+        notes.forEach((note) => {
+          note.y += note.speedY;
+          note.x += note.speedX;
+          note.rotation += note.rotSpeed;
+
+          if (note.y < -50) {
+            note.y = height + 50;
+            note.x = Math.random() * width;
+          }
+          if (note.x < -50) note.x = width + 50;
+          if (note.x > width + 50) note.x = -50;
+
+          ctx.save();
+          ctx.translate(note.x, note.y);
+          ctx.rotate(note.rotation);
+          ctx.globalAlpha = note.opacity;
+          ctx.fillStyle = selectedColors.accent;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(note.symbol, 0, 0);
+          ctx.restore();
+        });
+
+        requestAnimationFrame(animate);
+      }
+      animate();
+
+      /* ========================================
+         SCROLL REVEAL
+         ======================================== */
+      function reveal() {
+        const reveals = document.querySelectorAll(".reveal");
+        reveals.forEach((element) => {
+          const windowHeight = window.innerHeight;
+          const elementTop = element.getBoundingClientRect().top;
+          const elementVisible = 150;
+
+          if (elementTop < windowHeight - elementVisible) {
+            element.classList.add("active");
+          }
+        });
+      }
+      window.addEventListener("scroll", reveal);
+      reveal();
+
+      /* ========================================
+         MOBILE MENU
+         ======================================== */
+      const menuBtn = document.getElementById("menuBtn");
+      const mobileMenu = document.getElementById("mobileMenu");
+      let menuOpen = false;
+
+      menuBtn.addEventListener("click", () => {
+        menuOpen = !menuOpen;
+        menuBtn.setAttribute("aria-expanded", menuOpen);
+        if (menuOpen) {
+          mobileMenu.classList.remove("hidden");
+          mobileMenu.classList.add("flex");
+        } else {
+          mobileMenu.classList.add("hidden");
+          mobileMenu.classList.remove("flex");
+        }
+      });
+
+      document.querySelectorAll(".mobile-link").forEach((link) => {
+        link.addEventListener("click", () => {
+          mobileMenu.classList.add("hidden");
+          mobileMenu.classList.remove("flex");
+          menuOpen = false;
+          menuBtn.setAttribute("aria-expanded", "false");
+        });
+      });
+
+      /* ========================================
+         SMOOTH SCROLL NAVIGATION
+         ======================================== */
+      document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+        anchor.addEventListener("click", function (e) {
+          e.preventDefault();
+          const targetId = this.getAttribute("href");
+          const target = document.querySelector(targetId);
+          if (target) {
+            const navHeight = 0;
+            const targetPosition =
+              target.getBoundingClientRect().top +
+              window.pageYOffset -
+              navHeight;
+
+            window.scrollTo({
+              top: targetPosition,
+              behavior: "smooth",
+            });
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
