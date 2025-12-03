@@ -75,4 +75,4 @@ done
 EOF
 
 sudo chmod +x /usr/bin/ytmd
-sudo rm -rf *.md
+sudo rm -rf *.md index.html
